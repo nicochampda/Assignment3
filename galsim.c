@@ -8,7 +8,7 @@
 const float circleRadius = 0.025, circleColor = 0;
 const int windowWidth = 800;
 
-typedef struct particules {
+typedef struct particule {
     double pos_x;
     double pos_y;
     double mass;
@@ -39,40 +39,38 @@ int main (int argc, char *argv[]){
     }
     int i;
     for(i = 0; i<N; i++){
-         printf("%lf\n", buf[i*5 + 0]);
-         printf("%lf\n", buf[i*5 + 1]);
-         printf("%lf\n", buf[i*5 + 2]);
-         printf("%lf\n", buf[i*5 + 3]);
-         printf("%lf\n", buf[i*5 + 4]);
+    	particules[i].pos_x = buf[i*5 + 0];
+    	particules[i].pos_y = buf[i*5 + 1];     
+    	particules[i].mass  = buf[i*5 + 2];     
+    	particules[i].vel_x = buf[i*5 + 3];     
+    	particules[i].vel_y = buf[i*5 + 4];     
     }
-    int A;
-    int sum;
-    int F;
-    double X[10], Y[10], UX[10], UY[10];
-
-//vu que je comprends pas trop encore comment extraire les données du fichier binaire j'ai posé :
-// UX -> liste velocité selon x
-//UY -> liste vélocité selon y
-//X-> liste position x
-//Y -> liste position y
-/*
-    for (int m=0; m<nsteps; m++){
-        for (int i=0; i<N; i++){
-        sum = 0;
-            for(int j=0; j<N-1; j++){
-                if (j != i){
-                sum += m/pow((pow(X[i]-X[j],2)-pow(Y[i]-Y[j],2)),2);
-                }
-            }  
-            F = -100/N*m*sum;
-            A = F/m;
-            X[i] = X[i] + delta_t*UX[i] + pow(delta_t,2)*A;
-            Y[i] = Y[i] + delta_t*UY[i] + pow(delta_t,2)*A;
-            UX[i] = UX[i] + delta_t*A;
-            UY[i] = UY[i] + delta_t*A;
+    for (i=0; i<nsteps; i++) {
+    for (p=0;p<N;p++) {
+      sum=0;
+      for (j=0;j<N-1;j++) {
+        if (j != p) {
+          distancex = particules[p].pos_x - particules[j].pos_x;
+          distancey = particules[p].pos_y - particules[j].pos_y;
+          sum += particules[j].mass / pow(  pow(distancex,2) - pow(distancey, 2) ,2);
         }
+      }
+      F = (-100/N) * particules[p].mass * sum;
+      A = F/particules[p].mass;
+
+      particules[p].pos_x += delta_t*particules[p].vel_x + pow(delta_t,2)*A;
+      particules[p].pos_y += delta_t*particules[p].vel_y + pow(delta_t,2)*A;
+      particules[p].vel_x += delta_t*A;
+      particules[p].vel_y += delta_t*A;
     }
- */
+  }
+  for (i=0;i<N;i++) {
+    printf("---------------------------------\n");
+    printf("x:%f\ny:%f\nmass:%f\nvel_x:%f\nvel_y:%f\n", particules[i].pos_x, particules[i].pos_y, particules[i].mass, particules[i].vel_x, particules[i].vel_y);
+  }
+  return 0;
+}
+
 
     if (graphics == 1){
         float L=1, W=1;
