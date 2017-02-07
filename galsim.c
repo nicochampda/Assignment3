@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include "file_operations/file_operations.h"
 
 typedef struct particules {
     double pos_x;
@@ -15,19 +16,30 @@ int main (int argc, char *argv[]){
 
     if (argc != 6){
         printf("Use %s nbr_of_star filename nsteps delta_t graphics_0/1", argv[0]);
-        exit(1);
+        return -1;
     }
     int N = atoi(argv[1]);
+    const char* fileName = argv[2];
     int nsteps = atoi(argv[3]);
-    int delta_t = atoi(argv[4]);
+    int delta_t = atof(argv[4]);
     int graphics = atoi(argv[5]);
     double d;
-    FILE *file = fopen(argv[2],"r");
-    fscanf(file, "%lf", &d);
-    printf("file open \n");
-    printf("%lf\n", d);
-    fclose(file);
 
+    printf("file open \n");
+
+    double buf[5*N];
+    if (read_doubles_from_file(5*N, buf, fileName) != 0){
+        printf("Error reading file \n");
+        return -1;
+    }
+    int i;
+    for(i = 0; i<N; i++){
+         printf("%lf\n", buf[i*5 + 0]);
+         printf("%lf\n", buf[i*5 + 1]);
+         printf("%lf\n", buf[i*5 + 2]);
+         printf("%lf\n", buf[i*5 + 3]);
+         printf("%lf\n", buf[i*5 + 4]);
+    }
     int A;
     int sum;
     int F;
@@ -38,7 +50,7 @@ int main (int argc, char *argv[]){
 //UY -> liste vélocité selon y
 //X-> liste position x
 //Y -> liste position y
-
+/*
     for (int m=0; m<nsteps; m++){
         for (int i=0; i<N; i++){
         sum = 0;
@@ -55,6 +67,6 @@ int main (int argc, char *argv[]){
             UY[i] = UY[i] + delta_t*A;
         }
     }
- 
+ */
 return 0;
 }
