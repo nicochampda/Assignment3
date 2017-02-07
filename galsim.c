@@ -1,7 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+
+#include "graphics/graphics.h"
 #include "file_operations/file_operations.h"
+
+const float circleRadius = 0.025, circleColor = 0;
+const int windowWidth = 800;
 
 typedef struct particules {
     double pos_x;
@@ -68,5 +73,27 @@ int main (int argc, char *argv[]){
         }
     }
  */
+
+    if (graphics == 1){
+        float L=1, W=1;
+        int i, j;
+	double x, y;
+
+        InitializeGraphics(argv[0], windowWidth, windowWidth);
+        SetCAxes(0,1);
+        for (i=0; i<nsteps; i++){
+            ClearScreen();
+            for (j=0; j<N; j++){
+                /*set each particule*/
+                x = 0;
+                j = 1;
+                DrawCircle(x, y, L, W, circleRadius, circleColor);
+            }
+            Refresh();
+            usleep(delta_t*1000);
+        }
+        FlushDisplay();
+        CloseDisplay();
+    }
 return 0;
 }
