@@ -57,7 +57,7 @@ int main (int argc, char *argv[]){
                 if (j != p) {
                 distancex = particules[p].pos_x - particules[j].pos_x;
                 distancey = particules[p].pos_y - particules[j].pos_y;
-                sum +=particules[j].mass/(pow(pow(pow(distancex,2) + pow(distancey, 2),0.5)+E0,2));
+                sum +=particules[j].mass/(pow((pow(pow(distancex,2) + pow(distancey, 2),0.5)+E0,2));
 // particules[j].mass / pow(  pow(distancex,2) - pow(distancey, 2) ,2);
  //utilise la 2e formule pour la stabilite
                 }
