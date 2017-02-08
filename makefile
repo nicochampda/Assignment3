@@ -1,4 +1,4 @@
-CFLAGS=-Wall
+CFLAGS=-Wall -g
 INCLUDES=-I/opt/X11/include
 LDFLAGS=-L/opt/X11/lib -lX11 -lm
 
@@ -17,3 +17,4 @@ graphics.o: graphics/graphics.c graphics/graphics.h
 clean:
 	rm -f *.o
 	rm -f galsim
+	rm -f result.gal
