@@ -47,6 +47,16 @@ int main (int argc, char *argv[]){
     double time1;
     double positions_x[nsteps][N], positions_y[nsteps][N];
 
+    const float circleRadius = 0.05/N, circleColor = 0;
+    const int windowWidth = 800;
+    float L=1, W=1;
+    double x, y;
+
+    if (graphics == 1){
+        InitializeGraphics(argv[0], windowWidth, windowWidth);
+        SetCAxes(0,1);
+    }
+
     time1 = get_wall_seconds();
     if (read_doubles_from_file(5*N, buf, fileName) != 0){
         printf("Error reading file \n");
@@ -65,6 +75,7 @@ int main (int argc, char *argv[]){
   time1 = get_wall_seconds();
     double G = -100/N;
     for (p=0; p<nsteps; p++) {
+        if (graphics == 1) ClearScreen();
         for (i=0; i<N; i++) {
             sum_Fx = 0;
             sum_Fy = 0;
@@ -72,7 +83,7 @@ int main (int argc, char *argv[]){
                 distancex = particules[i]->pos_x - particules[j]->pos_x;
                 distancey = particules[i]->pos_y - particules[j]->pos_y;
                 rij = sqrt(distancex*distancex + distancey*distancey);
-                cst_j = (particules[j]->mass) / ((rij+E0)*(rij+E0)*(rij+E0));
+                cst_j = (particules[j]->mass) * (1.0 / ((rij+E0)*(rij+E0)*(rij+E0)));
                 cord_x = cst_j * (distancex);
                 cord_y = cst_j * (distancey);
                 sum_Fx += cord_x;
@@ -86,10 +97,24 @@ int main (int argc, char *argv[]){
             particules[i]->pos_x += delta_t*particules[i]->vel_x;
             particules[i]->pos_y += delta_t*particules[i]->vel_y;
 
-            positions_x[p][i] = particules[i]->pos_x;
-            positions_y[p][i] = particules[i]->pos_y;
+            if (graphics == 1){
+                x = particules[i]->pos_x;
+                y = particules[i]->pos_y;
+                DrawCircle(x, y, L, W, circleRadius, circleColor);
+            }
+
+            if (graphics == 1){
+                Refresh();
+                usleep(2000);
+            }
         }
     }
+
+    if (graphics == 1){
+        FlushDisplay();
+        CloseDisplay();
+    }
+
   printf("calculations took %7.3f wall seconds.\n", get_wall_seconds()-time1);
   time1 = get_wall_seconds();
     for (i=0; i<N; i++) {
@@ -109,7 +134,7 @@ int main (int argc, char *argv[]){
     for (i=0; i<N; i++){
         free(particules[i]);
     }
-    if (graphics == 1){
+   /* if (graphics == 1){
         const float circleRadius = 0.05/N, circleColor = 0;
         const int windowWidth = 800;
         float L=1, W=1;
@@ -120,7 +145,6 @@ int main (int argc, char *argv[]){
         for (p=0; p<nsteps; p++){
             ClearScreen();
             for (i=0; i<N; i++){
-                /*set each particule*/
                 x = positions_x[p][i];
                 y = positions_y[p][i];
                 //  printf("p %i x %lf y %lf\n", p, x, y);
@@ -131,6 +155,6 @@ int main (int argc, char *argv[]){
         }
         FlushDisplay();
         CloseDisplay();
-    }
+    }*/ 
 return 0;
 }
