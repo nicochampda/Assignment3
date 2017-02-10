@@ -46,6 +46,7 @@ int main (int argc, char *argv[]){
     double rij, cst_j;
     double distancex, distancey;
     double cord_x, cord_y;
+    double sum_Fx[N], sum_Fy[N];
 
   //Declaration of the inputs and outputs that will be respectively in filename and result.gal
     double input[5*N];
@@ -92,7 +93,10 @@ int main (int argc, char *argv[]){
     //Euler sympletic integration method
     const double Gdelta_t = (-100.0/n)*delta_t;
     for (p=0; p<nsteps; p++) {
-        double sum_Fx[N], sum_Fy[N];
+        for (i=0; i<N; i++){
+            sum_Fx[i] = 0;
+            sum_Fy[i] = 0;
+        }
         if (graphics == 1) ClearScreen();
         for (i=0; i<N; i++) {
             for (j=i; j<N; j++) {
@@ -105,7 +109,7 @@ int main (int argc, char *argv[]){
                 sum_Fx[i] += particules[j]->mass * cord_x; 
                 sum_Fy[i] += particules[j]->mass * cord_y;
                 sum_Fx[j] -= particules[i]->mass * cord_x;
-                sum_Fx[j] -= particules[i]->mass * cord_y;
+                sum_Fy[j] -= particules[i]->mass * cord_y;
             } 
         }
 

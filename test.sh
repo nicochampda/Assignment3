@@ -24,3 +24,9 @@ echo -e "\nTest N = 700"
 
 echo -e "\nTest N = 800"
 ./galsim 800 ./input_data/ellipse_N_00800.gal 200 1e-5 0
+
+echo -e "\nTest N = 900"
+./galsim 900 ./input_data/ellipse_N_00900.gal 200 1e-5 0
+
+echo -e "\nTest N = 1000"
+./galsim 1000 ./input_data/ellipse_N_01000.gal 200 1e-5 0
