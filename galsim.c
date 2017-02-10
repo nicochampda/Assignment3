@@ -98,8 +98,9 @@ int main (int argc, char *argv[]){
             sum_Fy[i] = 0;
         }
         if (graphics == 1) ClearScreen();
+        //Calcul of the interraction between particules i and j
         for (i=0; i<N; i++) {
-            for (j=i; j<N; j++) {
+            for (j=i+1; j<N; j++) {
                 distancex = particules[i]->pos_x - particules[j]->pos_x;
                 distancey = particules[i]->pos_y - particules[j]->pos_y;
                 rij = sqrt(distancex*distancex + distancey*distancey);
@@ -113,6 +114,7 @@ int main (int argc, char *argv[]){
             } 
         }
 
+        //Update of the position and velocity of each particule
         for (i=0; i<N; i++){
             particules[i]->vel_x += Gdelta_t * sum_Fx[i];
             particules[i]->vel_y += Gdelta_t * sum_Fy[i];
