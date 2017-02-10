@@ -43,7 +43,7 @@ int main (int argc, char *argv[]){
     int i, j, p;
     double rij, cst_j, cord_x, cord_y;
     double distancex, distancey;
-    double sum_Fx, sum_Fy, Ax, Ay;
+    double sum_Fx, sum_Fy;
 
   //Declaration of the inputs and outputs that will be respectively in filename and result.gal
     double input[5*N];
@@ -52,7 +52,7 @@ int main (int argc, char *argv[]){
 
   //Declaration of positions for the graphic part 
 
-    const float circleRadius = 0.05/N, circleColor = 0;
+    const float circleRadius = 0.005, circleColor = 0;
     const int windowWidth = 800;
     float L=1, W=1;
     double x, y;
@@ -106,10 +106,10 @@ int main (int argc, char *argv[]){
                 sum_Fy += cord_y;
             }
 
-            Ax = G * sum_Fx;
-            Ay = G * sum_Fy;
-            particules[i]->vel_x += delta_t*Ax;
-            particules[i]->vel_y += delta_t*Ay;
+            particules[i]->vel_x += delta_t*G*sum_Fx;
+            particules[i]->vel_y += delta_t*G*sum_Fy;
+        }
+        for (i=0; i<N; i++){
             particules[i]->pos_x += delta_t*particules[i]->vel_x;
             particules[i]->pos_y += delta_t*particules[i]->vel_y;
 
@@ -140,7 +140,7 @@ int main (int argc, char *argv[]){
         output[i*5 + 1] = particules[i]->pos_y;
         output[i*5 + 2] = particules[i]->mass;
         output[i*5 + 3] = particules[i]->vel_x;
-        output[i*5 + 4] = particules[i]->vel_x;
+        output[i*5 + 4] = particules[i]->vel_y;
     }
 
     if (write_doubles_to_file(5*N, output, "result.gal") != 0){
