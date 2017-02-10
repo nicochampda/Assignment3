@@ -45,7 +45,7 @@ int main (int argc, char *argv[]){
     int i, j, p;
     double rij, cst_j;
     double distancex, distancey;
-    double sum_Fx, sum_Fy;
+    double cord_x, cord_y;
 
   //Declaration of the inputs and outputs that will be respectively in filename and result.gal
     double input[5*N];
@@ -56,7 +56,7 @@ int main (int argc, char *argv[]){
 
     const float circleRadius = 0.005, circleColor = 0;
     const int windowWidth = 800;
-    float L=1, W=1;
+    const float L=1, W=1;
     double x, y;
 
     if (graphics == 1){
@@ -90,26 +90,28 @@ int main (int argc, char *argv[]){
     time1 = get_wall_seconds();
 
     //Euler sympletic integration method
-
-    const double G = -100.0/n;
+    const double Gdelta_t = (-100.0/n)*delta_t;
     for (p=0; p<nsteps; p++) {
+        double sum_Fx[N], sum_Fy[N];
         if (graphics == 1) ClearScreen();
         for (i=0; i<N; i++) {
-            sum_Fx = 0;
-            sum_Fy = 0;
-            for (j=0; j<N; j++) {
+            for (j=i; j<N; j++) {
                 distancex = particules[i]->pos_x - particules[j]->pos_x;
                 distancey = particules[i]->pos_y - particules[j]->pos_y;
                 rij = sqrt(distancex*distancex + distancey*distancey);
-                cst_j = (particules[j]->mass) * (1.0 / ((rij+E0)*(rij+E0)*(rij+E0)));
-                sum_Fx += cst_j * distancex;
-                sum_Fy += cst_j * distancey; 
-            }
-            particules[i]->vel_x += delta_t * G * sum_Fx;
-            particules[i]->vel_y += delta_t * G * sum_Fy;
+                cst_j = 1.0 /((rij+E0)*(rij+E0)*(rij+E0));
+                cord_x = cst_j * distancex;
+                cord_y = cst_j * distancey;
+                sum_Fx[i] += particules[j]->mass * cord_x; 
+                sum_Fy[i] += particules[j]->mass * cord_y;
+                sum_Fx[j] -= particules[i]->mass * cord_x;
+                sum_Fx[j] -= particules[i]->mass * cord_y;
+            } 
         }
 
         for (i=0; i<N; i++){
+            particules[i]->vel_x += Gdelta_t * sum_Fx[i];
+            particules[i]->vel_y += Gdelta_t * sum_Fy[i];
             particules[i]->pos_x += delta_t*particules[i]->vel_x;
             particules[i]->pos_y += delta_t*particules[i]->vel_y;
 
