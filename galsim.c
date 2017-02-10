@@ -34,6 +34,8 @@ int main (int argc, char *argv[]){
     const int nsteps = atoi(argv[3]);
     const double delta_t = atof(argv[4]);
     const int graphics = atoi(argv[5]);
+
+    const double n = atof(argv[1]);
   //Definition of Epsilon0
     const double E0 = 0.001;
     particule particules[N];
@@ -41,7 +43,7 @@ int main (int argc, char *argv[]){
   //Declaration of variables for the sympletic Euler integration method
  
     int i, j, p;
-    double rij, cst_j, cord_x, cord_y;
+    double rij, cst_j;
     double distancex, distancey;
     double sum_Fx, sum_Fy;
 
@@ -63,7 +65,7 @@ int main (int argc, char *argv[]){
     }
 
    //for time measures of the program 
-        double time1;
+    double time1;
 
     time1 = get_wall_seconds();
 
@@ -87,9 +89,9 @@ int main (int argc, char *argv[]){
     printf("reading files took %7.3f wall seconds.\n", get_wall_seconds()-time1);
     time1 = get_wall_seconds();
 
-//Euler sympletic integration method
+    //Euler sympletic integration method
 
-    double G = -100/N;
+    const double G = -100.0/n;
     for (p=0; p<nsteps; p++) {
         if (graphics == 1) ClearScreen();
         for (i=0; i<N; i++) {
@@ -100,15 +102,13 @@ int main (int argc, char *argv[]){
                 distancey = particules[i]->pos_y - particules[j]->pos_y;
                 rij = sqrt(distancex*distancex + distancey*distancey);
                 cst_j = (particules[j]->mass) * (1.0 / ((rij+E0)*(rij+E0)*(rij+E0)));
-                cord_x = cst_j * (distancex);
-                cord_y = cst_j * (distancey);
-                sum_Fx += cord_x;
-                sum_Fy += cord_y;
+                sum_Fx += cst_j * distancex;
+                sum_Fy += cst_j * distancey; 
             }
-
-            particules[i]->vel_x += delta_t*G*sum_Fx;
-            particules[i]->vel_y += delta_t*G*sum_Fy;
+            particules[i]->vel_x += delta_t * G * sum_Fx;
+            particules[i]->vel_y += delta_t * G * sum_Fy;
         }
+
         for (i=0; i<N; i++){
             particules[i]->pos_x += delta_t*particules[i]->vel_x;
             particules[i]->pos_y += delta_t*particules[i]->vel_y;
