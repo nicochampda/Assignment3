@@ -2,7 +2,9 @@
 #include <stdlib.h>
 #include <math.h>
 #include <sys/time.h>
+/*
 #include "graphics/graphics.h"
+*/
 #include "file_operations/file_operations.h"
 
 static double get_wall_seconds() {
@@ -20,6 +22,28 @@ typedef struct particule {
     double vel_y;
 }*particule;
 
+
+//Definition of quadtree
+typedef struct node{
+    double center_x;
+    double center_y;
+    double center_mass;
+    struct node *ul;
+    struct node *ur;
+    struct node *dl;
+    struct node *dr;
+}quadtree;
+
+
+//Function that make recursively the quad tree
+void makeQuadtree(){
+    
+}
+
+//Compute force recursively
+void computeForce(){
+
+}
 
 int main (int argc, char *argv[]){
 
@@ -55,7 +79,7 @@ int main (int argc, char *argv[]){
 
   //Declaration of positions for the graphic part 
 
-    const float circleRadius = 0.005, circleColor = 0;
+    /*const float circleRadius = 0.005, circleColor = 0;
     const int windowWidth = 800;
     const float L=1, W=1;
     double x, y;
@@ -63,7 +87,7 @@ int main (int argc, char *argv[]){
     if (graphics == 1){
         InitializeGraphics(argv[0], windowWidth, windowWidth);
         SetCAxes(0,1);
-    }
+    }*/
 
    //for time measures of the program 
     double time1;
@@ -93,35 +117,19 @@ int main (int argc, char *argv[]){
     //Euler sympletic integration method
     const double Gdelta_t = (-100.0/n)*delta_t;
     for (p=0; p<nsteps; p++) {
-        for (i=0; i<N; i++){
-            sum_Fx[i] = 0;
-            sum_Fy[i] = 0;
-        }
-        if (graphics == 1) ClearScreen();
-        //Calcul of the interraction between particules i and j
-        for (i=0; i<N; i++) {
-            for (j=i+1; j<N; j++) {
-                distancex = particules[i]->pos_x - particules[j]->pos_x;
-                distancey = particules[i]->pos_y - particules[j]->pos_y;
-                rij = sqrt(distancex*distancex + distancey*distancey);
-                cst_j = 1.0 /((rij+E0)*(rij+E0)*(rij+E0));
-                cord_x = cst_j * distancex;
-                cord_y = cst_j * distancey;
-                sum_Fx[i] += particules[j]->mass * cord_x; 
-                sum_Fy[i] += particules[j]->mass * cord_y;
-                sum_Fx[j] -= particules[i]->mass * cord_x;
-                sum_Fy[j] -= particules[i]->mass * cord_y;
-            } 
-        }
 
-        //Update of the position and velocity of each particule
-        for (i=0; i<N; i++){
-            particules[i]->vel_x += Gdelta_t * sum_Fx[i];
-            particules[i]->vel_y += Gdelta_t * sum_Fy[i];
-            particules[i]->pos_x += delta_t*particules[i]->vel_x;
-            particules[i]->pos_y += delta_t*particules[i]->vel_y;
+         //make the quadtree
+	 makeQuadtree();
 
-            if (graphics == 1){
+	 //compute forces for each particule recursively
+	 computeForce();
+
+
+	    
+	    
+    	/*
+	for (i=0; i<N; i++) {
+	    if (graphics == 1){
                 x = particules[i]->pos_x;
                 y = particules[i]->pos_y;
                 DrawCircle(x, y, L, W, circleRadius, circleColor);
@@ -131,11 +139,11 @@ int main (int argc, char *argv[]){
             Refresh();
             usleep(2000);
         }
-    }
 
     if (graphics == 1){
         FlushDisplay();
         CloseDisplay();
+    }*/
     }
 
     printf("calculations took %7.3f wall seconds.\n", get_wall_seconds()-time1);
