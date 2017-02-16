@@ -36,8 +36,19 @@ typedef struct node{
     struct node *dl;
     struct node *dr;
 }quadtree;
+// function to check if a particle p is in a rectangle of a quadtree
+int is_in_rectangle(double xmin, double xmax, double ymin, double ymax, double pos_x, double pos_y){
+       if(pos_x>xmax || pos_x<xmin || pos_y>ymax || pos_y<ymin){
+      return 0 ;
+}
+       else{
+      return 1 ;
+}
 
-
+void insert_in_list
+      
+    
+}
 //Function that make recursively the quad tree
 quadtree makeQuadtree(quadtree *src, double xmin, double xmax, double ymin, double ymax, int *list, int len){
     if (src->part_nbr > 1){  //general case
