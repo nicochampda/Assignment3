@@ -25,9 +25,12 @@ typedef struct particule {
 
 //Definition of quadtree
 typedef struct node{
+    int part_index[];
     double center_x;
     double center_y;
     double center_mass;
+    int part_nbr;
+
     struct node *ul;
     struct node *ur;
     struct node *dl;
@@ -36,8 +39,40 @@ typedef struct node{
 
 
 //Function that make recursively the quad tree
-void makeQuadtree(){
-    
+quadtree makeQuadtree(quadtree *src, double xmin, double xmax, double ymin, double ymax, int *list, int len){
+    if (src->part_nbr > 1){  //general case
+        
+        //calculate new space
+        double xmid = (xmax - xmin)/2;
+        double ymid = (ymin - ymax)/2;
+
+        //Separate particules into the 4 quad
+
+        //Allocate memory for the 4 new quadtree
+        quadtree *ul = (quadtree *)malloc(sizeof(quadtree));
+        quadtree *ur = (quadtree *)malloc(sizeof(quadtree));
+        quadtree *dl = (quadtree *)malloc(sizeof(quadtree));
+        quadtree *dr = (quadtree *)malloc(sizeof(quadtree));
+
+        //Apply recursively on each subsquare
+        quadtree->ul = makeQuadtree(ul ,xmin, xmid, ymin, ymid);
+        quadtree->ur = makeQuadtree(ur ,xmid, xmax, ymin, ymid);
+        quadtree->dl = makeQuadtree(dl ,xmin, xmid, ymid, ymax);
+        quadtree->dr = makeQuadtree(dr ,xmid, xmax, ymid, ymax);
+
+        //merge result
+    }else{
+        if (src->part_nbr == 1){
+            particule current = particules[part_index[0]];
+            src->center_x = particule->pos_x;
+            src->center_y = particule->pos_y;
+            src->center_mass = particule->mass
+        }else{
+            src->center_x = 0;
+            src->center_y = 0;
+            src->center_mass = 0;
+        }
+    }
 }
 
 //Compute force recursively
@@ -119,7 +154,7 @@ int main (int argc, char *argv[]){
     for (p=0; p<nsteps; p++) {
 
          //make the quadtree
-	 makeQuadtree();
+	quadtree repartition = makeQuadtree();
 
 	 //compute forces for each particule recursively
 	 computeForce();
