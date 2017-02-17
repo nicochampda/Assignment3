@@ -7,6 +7,9 @@
 */
 #include "file_operations/file_operations.h"
 
+//Definition of Epsilon0
+const double E0 = 0.001;
+
 static double get_wall_seconds() {
   struct timeval tv;
   gettimeofday(&tv, NULL);
@@ -29,6 +32,7 @@ typedef struct node{
     double center_x;
     double center_y;
     double center_mass;
+    double box_size;
     int part_nbr;
 
     struct node *ul;
@@ -54,7 +58,7 @@ void makeQuadtree(quadtree *src, double xmin, double xmax, double ymin, double y
         quadtree *dl = (quadtree *)malloc(sizeof(quadtree));
         quadtree *dr = (quadtree *)malloc(sizeof(quadtree));
 
-        //set ul list of index and len
+        //set ul list of index and nbr
 
 
         //Apply recursively on each subsquare
@@ -72,6 +76,7 @@ void makeQuadtree(quadtree *src, double xmin, double xmax, double ymin, double y
                          ur->center_mass * ur->center_y +
                          dl->center_mass * dl->center_y +
                          dr->center_mass * dr->center_y) / src->center_mass; 
+        src->box_size = xmax -xmin;
 
         src->ul = ul;
         src->ur = ur;
@@ -84,17 +89,53 @@ void makeQuadtree(quadtree *src, double xmin, double xmax, double ymin, double y
             src->center_x = current->pos_x;
             src->center_y = current->pos_y;
             src->center_mass = current->mass;
+            src->box_size = xmax -xmin;
         }else{
             src->center_x = 0;
             src->center_y = 0;
             src->center_mass = 0;
+            src->box_size = xmax -xmin;
         }
     }
 }
 
 //Compute force recursively
-void computeForce(){
+void computeForce(double x, double y, double mass, double theta, quadtree *src, double Fx, double Fy, particule *particules){
+    if (src->part_nbr > 1){
+        double distancex = x - src->center_x;
+        double distancey = y - src->center_y;
+        double dist_box = sqrt(distancex*distancex + distancey*distancey); 
+        if(src->box_size / dist_box > theta){//compare theta to the threshold
+            //Apply recursion on all sub trees
+            computeForce(x, y, mass, theta, src->ul, Fx, Fy, particules);
+            computeForce(x, y, mass, theta, src->ur, Fx, Fy, particules);
+            computeForce(x, y, mass, theta, src->dl, Fx, Fy, particules);
+            computeForce(x, y, mass, theta, src->dr, Fx, Fy, particules);
+        }else{
+            //or calculate force from G on the particule
+            double distancex = x - src->center_x;
+            double distancey = y - src->center_y;
+            double rij = sqrt(distancex*distancex + distancey*distancey);
+            double cst_j = src->center_mass * 1.0 /((rij+E0)*(rij+E0)*(rij+E0));
+            double cord_x = cst_j * distancex;
+            double cord_y = cst_j * distancey;
+            Fx += cord_x;
+            Fy += cord_y;
+        }
 
+    }else{
+        if (src->part_nbr ==1){
+            //calculate force apply by the only particule of the quadtree
+            double distancex = x - src->center_x;
+            double distancey = y - src->center_y;
+            double rij = sqrt(distancex*distancex + distancey*distancey);
+            double cst_j = src->center_mass * 1.0 /((rij+E0)*(rij+E0)*(rij+E0));
+            double cord_x = cst_j * distancex;
+            double cord_y = cst_j * distancey;
+            Fx += cord_x;
+            Fy += cord_y;
+        }
+    }
 }
 
 int main (int argc, char *argv[]){
@@ -109,19 +150,15 @@ int main (int argc, char *argv[]){
     const char* fileName = argv[2];
     const int nsteps = atoi(argv[3]);
     const double delta_t = atof(argv[4]);
-    const int graphics = atoi(argv[5]);
+    const double theta = atof(argv[5]);
+    const int graphics = atoi(argv[6]);
 
     const double n = atof(argv[1]);
-  //Definition of Epsilon0
-    const double E0 = 0.001;
     particule particules[N];
   
   //Declaration of variables for the sympletic Euler integration method
  
-    int i, j, p;
-    double rij, cst_j;
-    double distancex, distancey;
-    double cord_x, cord_y;
+    int i, p;
     double sum_Fx[N], sum_Fy[N];
 
   //Declaration of the inputs and outputs that will be respectively in filename and result.gal
@@ -177,14 +214,24 @@ int main (int argc, char *argv[]){
         for (i = 0; i<N; i++)
             index[i] = i;
         root->part_index = index;
+
         makeQuadtree(root, 0, 1, 0, 1, particules);
 
-	 //compute forces for each particule recursively
-	 computeForce();
-
-
+	    //compute forces for each particule recursively 
+        for (i = 0; i<N; i++){
+            sum_Fx[i] = 0;
+            sum_Fy[i] = 0;
+            computeForce(particules[i]->pos_x, particules[i]->pos_y, particules[i]->mass, theta, root, sum_Fx[i], sum_Fy[i], particules);
+        }
 	    
-	    
+	    //Update of the position and velocity of each particule
+        for (i=0; i<N; i++){
+            particules[i]->vel_x += Gdelta_t * sum_Fx[i];
+            particules[i]->vel_y += Gdelta_t * sum_Fy[i];
+            particules[i]->pos_x += delta_t*particules[i]->vel_x;
+            particules[i]->pos_y += delta_t*particules[i]->vel_y;
+        }
+
     	/*
 	for (i=0; i<N; i++) {
 	    if (graphics == 1){
@@ -225,9 +272,9 @@ int main (int argc, char *argv[]){
 
   printf("writing took %7.3f wall seconds.\n", get_wall_seconds()-time1);
     
-    for (i=0; i<N; i++){
+    /*for (i=0; i<N; i++){
         free(particules[i]);
-    }
+    }*/
 
 return 0;
 }
