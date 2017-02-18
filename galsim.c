@@ -43,32 +43,68 @@ typedef struct node{
 
 // function to check if a particle p is in a rectangle of a quadtree
 int is_in_rectangle(double xmin, double xmax, double ymin, double ymax, double pos_x, double pos_y){
-       if(pos_x>xmax || pos_x<xmin || pos_y>ymax || pos_y<ymin){
-      return 0 ;
+    if(pos_x>xmax || pos_x<xmin || pos_y>ymax || pos_y<ymin){
+        return 0 ;
+    }else{
+        return 1 ;
+    }
 }
-       else{
-      return 1 ;
-}
-}
 
 
 
-
-void insert_in_list(int* list,int new_element, int N){
-     int* maliste=list; 
-     maliste=realloc(maliste,(N+1)*sizeof(int));
-     maliste[N]=new_element;
+//insert an elment at the end of an array
+void insert_in_list(int *list,int new_element, int N){
+    int* maliste = list;
+    maliste = realloc(maliste,(N+1)*sizeof(int));
+    maliste[N] = new_element;
 }      
    
 //Function that make recursively the quad tree
 void makeQuadtree(quadtree *src, double xmin, double xmax, double ymin, double ymax, particule *particules){
     if (src->part_nbr > 1){  //general case
+  printf("recurse %i \n",src->part_nbr);
         
         //calculate new space
         double xmid = (xmax - xmin)/2;
-        double ymid = (ymin - ymax)/2;
+        double ymid = (ymax - ymin)/2;
 
         //Separate particules into the 4 quad
+        int i;
+        int N = src->part_nbr;
+        
+        int ul_len = 0;
+        int *ul_list = (int*)malloc(sizeof(int));
+        int ur_len = 0;
+        int *ur_list = (int*)malloc(sizeof(int));
+        int dl_len = 0;
+        int *dl_list = (int*)malloc(sizeof(int));
+        int dr_len = 0;
+        int *dr_list = (int*)malloc(sizeof(int));
+
+        for(i = 0; i<N; i++){
+            int cur_part = src->part_index[i];
+            double pos_x = particules[cur_part]->pos_x;
+            double pos_y = particules[cur_part]->pos_y;
+            if (is_in_rectangle(xmin, xmid, ymin, ymid, pos_x, pos_y)){
+                insert_in_list(ul_list, i, ul_len);
+                ul_len++;
+            }else{
+                if (is_in_rectangle(xmid, xmax, ymin, ymid, pos_x, pos_y)){
+                    insert_in_list(ur_list, i, ur_len);
+                    ur_len++;
+                }else{
+                    if (is_in_rectangle(xmin, xmid, ymid, ymax, pos_x, pos_y)){
+                        insert_in_list(dl_list, i, dl_len);
+                        dl_len++;
+                    }else{
+                        if (is_in_rectangle(xmid, xmax, ymid, ymax, pos_x, pos_y)){
+                            insert_in_list(dr_list, i, dr_len);
+                            dr_len++;
+                        }
+                    }
+                }
+            }
+        }
 
         //Allocate memory for the 4 new quadtree
         quadtree *ul = (quadtree *)malloc(sizeof(quadtree));
@@ -77,13 +113,21 @@ void makeQuadtree(quadtree *src, double xmin, double xmax, double ymin, double y
         quadtree *dr = (quadtree *)malloc(sizeof(quadtree));
 
         //set ul list of index and nbr
-
+        ul->part_nbr = ul_len;
+        ul->part_index = ul_list;
+        ur->part_nbr = ur_len;
+        ur->part_index = ur_list;
+        dl->part_nbr = dl_len;
+        dl->part_index = dl_list;
+        dr->part_nbr = dr_len;
+        dr->part_index = dr_list;
 
         //Apply recursively on each subsquare
         makeQuadtree(ul ,xmin, xmid, ymin, ymid, particules);
         makeQuadtree(ur ,xmid, xmax, ymin, ymid, particules);
         makeQuadtree(dl ,xmin, xmid, ymid, ymax, particules);
         makeQuadtree(dr ,xmid, xmax, ymid, ymax, particules);
+        //makeQuadtree(dr ,0, 0, 0, 0, particules);
 
         src->center_mass = ul->center_mass + ur->center_mass + dl->center_mass + dr->center_mass; 
         src->center_x = (ul->center_mass * ul->center_x + 
@@ -108,11 +152,20 @@ void makeQuadtree(quadtree *src, double xmin, double xmax, double ymin, double y
             src->center_y = current->pos_y;
             src->center_mass = current->mass;
             src->box_size = xmax -xmin;
+            src->ul = NULL;
+            src->ur = NULL;
+            src->dl = NULL;
+            src->dr = NULL;
         }else{
-            src->center_x = 0;
+            src = NULL;
+            /*src->center_x = 0;
             src->center_y = 0;
             src->center_mass = 0;
             src->box_size = xmax -xmin;
+            src->ul = NULL;
+            src->ur = NULL;
+            src->dl = NULL;
+            src->dr = NULL;*/
         }
     }
 }
@@ -159,8 +212,8 @@ void computeForce(double x, double y, double mass, double theta, quadtree *src, 
 int main (int argc, char *argv[]){
 
 
-    if (argc != 6){
-        printf("Wrong number of arguments given. Write:%s nbr_of_star filename nsteps delta_t graphics_0/1", argv[0]);
+    if (argc != 7){
+        printf("Wrong number of arguments given. Write:%s nbr_of_star filename nsteps delta_t theta graphics_0/1\n", argv[0]);
         return -1;
     }
 
@@ -215,6 +268,7 @@ int main (int argc, char *argv[]){
     	particules[i]->mass  = input[i*5 + 2];     
     	particules[i]->vel_x = input[i*5 + 3];     
     	particules[i]->vel_y = input[i*5 + 4];     
+        printf("particules %i: x,y = %f,%f\n",i,particules[i]->pos_x, particules[i]->pos_y);
     }
 
 
@@ -224,17 +278,16 @@ int main (int argc, char *argv[]){
     //Euler sympletic integration method
     const double Gdelta_t = (-100.0/n)*delta_t;
     for (p=0; p<nsteps; p++) {
-
         //make the quadtree
-        quadtree *root = (quadtree *)malloc(sizeof(quadtree));
+        quadtree *root = malloc(sizeof(quadtree));
         root->part_nbr = N;
         int index[N];
         for (i = 0; i<N; i++)
             index[i] = i;
         root->part_index = index;
-
+        printf("run make quadtree\n");
         makeQuadtree(root, 0, 1, 0, 1, particules);
-
+        printf("quadtree %d %d %d %d %d \n",root->part_nbr, root->ul->part_nbr, root->ur->part_nbr, root->dl->part_nbr, root->dr->part_nbr);
 	    //compute forces for each particule recursively 
         for (i = 0; i<N; i++){
             sum_Fx[i] = 0;
@@ -249,6 +302,9 @@ int main (int argc, char *argv[]){
             particules[i]->pos_x += delta_t*particules[i]->vel_x;
             particules[i]->pos_y += delta_t*particules[i]->vel_y;
         }
+
+        //Free quad tree
+
 
     	/*
 	for (i=0; i<N; i++) {
