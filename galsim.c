@@ -56,10 +56,11 @@ int is_in_rectangle(double xmin, double xmax, double ymin, double ymax, double p
 
 
 //insert an elment at the end of an array
-void insert_in_list(int *list,int new_element, int N){
-    int* maliste = list;
-    maliste = realloc(maliste,(N+1)*sizeof(int));
+int * insert_in_list(int *list,int new_element, int N){
+    int* maliste;
+    maliste = realloc(list,(N+1)*sizeof(int));
     maliste[N] = new_element;
+    return maliste;
 }      
    
 //Function that make recursively the quad tree
@@ -74,7 +75,8 @@ void makeQuadtree(quadtree *src, double xmin, double xmax, double ymin, double y
         //Separate particules into the 4 quad
         int i;
         int N = src->part_nbr;
-        
+        printf("nbr de tours : %i\n", N);
+        /*
         int ul_len = 0;
         int *ul_list = (int*)malloc(sizeof(int));
         int ur_len = 0;
@@ -83,38 +85,55 @@ void makeQuadtree(quadtree *src, double xmin, double xmax, double ymin, double y
         int *dl_list = (int*)malloc(sizeof(int));
         int dr_len = 0;
         int *dr_list = (int*)malloc(sizeof(int));
-
-        for(i = 0; i<N; i++){
-            int cur_part = src->part_index[i];
-            double pos_x = particules[cur_part]->pos_x;
-            double pos_y = particules[cur_part]->pos_y;
-            if (is_in_rectangle(xmin, xmid, ymin, ymid, pos_x, pos_y)){
-                insert_in_list(ul_list, cur_part, ul_len);
-                ul_len++;
-            }else{
-                if (is_in_rectangle(xmid, xmax, ymin, ymid, pos_x, pos_y)){
-                    insert_in_list(ur_list, cur_part, ur_len);
-                    ur_len++;
-                }else{
-                    if (is_in_rectangle(xmin, xmid, ymid, ymax, pos_x, pos_y)){
-                        insert_in_list(dl_list, cur_part, dl_len);
-                        dl_len++;
-                    }else{
-                        if (is_in_rectangle(xmid, xmax, ymid, ymax, pos_x, pos_y)){
-                            insert_in_list(dr_list, cur_part, dr_len);
-                            dr_len++;
-                        }
-                    }
-                }
-            }
-        }
-
+*/
         //Allocate memory for the 4 new quadtree
         quadtree *ul = (quadtree *)malloc(sizeof(quadtree));
         quadtree *ur = (quadtree *)malloc(sizeof(quadtree));
         quadtree *dl = (quadtree *)malloc(sizeof(quadtree));
         quadtree *dr = (quadtree *)malloc(sizeof(quadtree));
 
+        ul->part_index = (int*)malloc(sizeof(int));
+        ul->part_nbr = 0;
+        ur->part_index = (int*)malloc(sizeof(int));
+        ur->part_nbr = 0;
+        dl->part_index = (int*)malloc(sizeof(int));
+        dl->part_nbr = 0;
+        dr->part_index = (int*)malloc(sizeof(int));
+        dr->part_nbr = 0;
+
+    printf("ul ptr %p\n", ul->part_index);
+        for(i = 0; i<N; i++){
+            printf("boucle %i\n",i);
+            int cur_part = src->part_index[i];
+            printf("cur_part : %i\n", cur_part);
+            double pos_x = particules[cur_part]->pos_x;
+            double pos_y = particules[cur_part]->pos_y;
+            if (is_in_rectangle(xmin, xmid, ymin, ymid, pos_x, pos_y)){
+                ul->part_index = insert_in_list(ul->part_index, cur_part, ul->part_nbr);
+                ul->part_nbr++;
+                //printf("changement adresse : %d\n", ul->part_index);
+            }else{
+                if (is_in_rectangle(xmid, xmax, ymin, ymid, pos_x, pos_y)){
+                    ur->part_index = insert_in_list(ur->part_index, cur_part, ur->part_nbr);
+                    ur->part_nbr++;
+                }else{
+                    if (is_in_rectangle(xmin, xmid, ymid, ymax, pos_x, pos_y)){
+                        dl->part_index = insert_in_list(dl->part_index, cur_part, dl->part_nbr);
+                        dl->part_nbr++;
+                    }else{
+                        if (is_in_rectangle(xmid, xmax, ymid, ymax, pos_x, pos_y)){
+                            dr->part_index = insert_in_list(dr->part_index, cur_part, dr->part_nbr);
+                            dr->part_nbr++;
+                        }
+                    }
+                }
+            }
+        }
+
+printf("ul->part_nbr : %i\n", ul->part_nbr);
+printf("ul->part_nbr : %i\n", ul->part_index[0]);
+
+/*printf("quad ptr %p\n", ul->part_index);
         //set ul list of index and nbr
         ul->part_nbr = ul_len;
         ul->part_index = ul_list;
@@ -125,6 +144,7 @@ void makeQuadtree(quadtree *src, double xmin, double xmax, double ymin, double y
         dr->part_nbr = dr_len;
         dr->part_index = dr_list;
 
+printf("final ptr %p\n", ul->part_index);*/
         //Apply recursively on each subsquare
         makeQuadtree(ul ,xmin, xmid, ymin, ymid, particules);
         makeQuadtree(ur ,xmid, xmax, ymin, ymid, particules);
@@ -149,7 +169,10 @@ void makeQuadtree(quadtree *src, double xmin, double xmax, double ymin, double y
 
     }else{
         if (src->part_nbr == 1){
-            particule current = particules[src->part_index[0]];
+            printf("adress : %p\n", src->part_index);
+            int index_of_part = src->part_index[0];
+            printf("index : %i\n", index_of_part);
+            particule current = particules[index_of_part];
             src->center_x = current->pos_x;
             src->center_y = current->pos_y;
             src->center_mass = current->mass;
@@ -159,6 +182,7 @@ void makeQuadtree(quadtree *src, double xmin, double xmax, double ymin, double y
             src->dl = NULL;
             src->dr = NULL;
         }else{
+            free(src->part_index);
             src = NULL;
             /*src->center_x = 0;
             src->center_y = 0;
@@ -215,11 +239,14 @@ void computeForce(double x, double y, double mass, double theta, quadtree *src, 
 
 //Free all node of the quad tree
 void freeTree(quadtree *src){
-    if (src->ul != NULL) freeTree(src->ul);
-    if (src->ur != NULL) freeTree(src->ur);
-    if (src->dl != NULL) freeTree(src->dl);
-    if (src->dr != NULL) freeTree(src->dr);
-   // free(src->part_index);
+    if (src->part_nbr > 1){
+        freeTree(src->ul);
+        freeTree(src->ur);
+        freeTree(src->dl);
+        freeTree(src->dr);
+    }
+    if (src->part_nbr >0)
+        free(src->part_index);
     free(src);
 }
 
@@ -296,9 +323,9 @@ int main (int argc, char *argv[]){
     const double Gdelta_t = (-100.0/n)*delta_t;
     for (p=0; p<nsteps; p++) {
         //make the quadtree
-        quadtree *root = malloc(sizeof(quadtree));
+        quadtree *root = (quadtree*)malloc(sizeof(quadtree));
         root->part_nbr = N;
-        int index[N];
+        int *index = (int*)malloc(N*sizeof(int));
         for (i = 0; i<N; i++)
             index[i] = i;
         root->part_index = index;
@@ -321,8 +348,7 @@ int main (int argc, char *argv[]){
         }
 
         //Free quad tree
-        //freeTree(root);
-
+        freeTree(root);
     	/*
 	for (i=0; i<N; i++) {
 	    if (graphics == 1){
@@ -363,9 +389,9 @@ int main (int argc, char *argv[]){
 
   printf("writing took %7.3f wall seconds.\n", get_wall_seconds()-time1);
     
-    /*for (i=0; i<N; i++){
+    for (i=0; i<N; i++){
         free(particules[i]);
-    }*/
+    }
 
 return 0;
 }
