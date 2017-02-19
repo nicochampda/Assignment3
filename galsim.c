@@ -2,9 +2,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <sys/time.h>
-/*
 #include "graphics/graphics.h"
-*/
 #include "file_operations/file_operations.h"
 
 //Definition of Epsilon0
@@ -60,7 +58,8 @@ int * insert_in_list(int *list,int new_element, int N){
     return maliste;
 }      
 
-int isInBox(int elmt,int *list, int len){
+//test if elmt is in list
+int isInBox(int elmt, int *list, int len){
     int i;
     for (i = 0; i < len; i ++){
         if (list[i] == elmt)
@@ -259,7 +258,7 @@ int main (int argc, char *argv[]){
 
   //Declaration of positions for the graphic part 
 
-    /*const float circleRadius = 0.005, circleColor = 0;
+    const float circleRadius = 0.005, circleColor = 0;
     const int windowWidth = 800;
     const float L=1, W=1;
     double x, y;
@@ -267,7 +266,7 @@ int main (int argc, char *argv[]){
     if (graphics == 1){
         InitializeGraphics(argv[0], windowWidth, windowWidth);
         SetCAxes(0,1);
-    }*/
+    }
 
    //for time measures of the program 
     double time1;
@@ -326,25 +325,24 @@ int main (int argc, char *argv[]){
 
         //Free quad tree
         freeTree(root);
-    	/*
-	for (i=0; i<N; i++) {
+    	
 	    if (graphics == 1){
+            ClearScreen();
+            for (i=0; i<N; i++) {
                 x = particules[i]->pos_x;
                 y = particules[i]->pos_y;
                 DrawCircle(x, y, L, W, circleRadius, circleColor);
             }
-        }
-        if (graphics == 1){
             Refresh();
-            usleep(2000);
+            usleep(3000);
         }
+
+    }
 
     if (graphics == 1){
         FlushDisplay();
         CloseDisplay();
-    }*/
     }
-
     printf("calculations took %7.3f wall seconds.\n", get_wall_seconds()-time1);
     time1 = get_wall_seconds();
 
