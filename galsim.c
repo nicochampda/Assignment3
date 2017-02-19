@@ -43,9 +43,12 @@ typedef struct node{
 
 // function to check if a particle p is in a rectangle of a quadtree
 int is_in_rectangle(double xmin, double xmax, double ymin, double ymax, double pos_x, double pos_y){
+    //printf("args : %.3f %.3f %.3f %.3f %.3f %.3f\t", xmin, xmax, ymin, ymax, pos_x, pos_y);
     if(pos_x>xmax || pos_x<xmin || pos_y>ymax || pos_y<ymin){
+        //printf("out\n");
         return 0 ;
     }else{
+        //printf("in\n");
         return 1 ;
     }
 }
@@ -62,11 +65,11 @@ void insert_in_list(int *list,int new_element, int N){
 //Function that make recursively the quad tree
 void makeQuadtree(quadtree *src, double xmin, double xmax, double ymin, double ymax, particule *particules){
     if (src->part_nbr > 1){  //general case
-  printf("recurse %i \n",src->part_nbr);
+        //printf("recurse %i %f %f %f %f\n",src->part_nbr, xmin, xmax, ymin,ymax);
         
         //calculate new space
-        double xmid = (xmax - xmin)/2;
-        double ymid = (ymax - ymin)/2;
+        double xmid = (xmax + xmin)/2;
+        double ymid = (ymax + ymin)/2;
 
         //Separate particules into the 4 quad
         int i;
@@ -86,19 +89,19 @@ void makeQuadtree(quadtree *src, double xmin, double xmax, double ymin, double y
             double pos_x = particules[cur_part]->pos_x;
             double pos_y = particules[cur_part]->pos_y;
             if (is_in_rectangle(xmin, xmid, ymin, ymid, pos_x, pos_y)){
-                insert_in_list(ul_list, i, ul_len);
+                insert_in_list(ul_list, cur_part, ul_len);
                 ul_len++;
             }else{
                 if (is_in_rectangle(xmid, xmax, ymin, ymid, pos_x, pos_y)){
-                    insert_in_list(ur_list, i, ur_len);
+                    insert_in_list(ur_list, cur_part, ur_len);
                     ur_len++;
                 }else{
                     if (is_in_rectangle(xmin, xmid, ymid, ymax, pos_x, pos_y)){
-                        insert_in_list(dl_list, i, dl_len);
+                        insert_in_list(dl_list, cur_part, dl_len);
                         dl_len++;
                     }else{
                         if (is_in_rectangle(xmid, xmax, ymid, ymax, pos_x, pos_y)){
-                            insert_in_list(dr_list, i, dr_len);
+                            insert_in_list(dr_list, cur_part, dr_len);
                             dr_len++;
                         }
                     }
@@ -127,7 +130,6 @@ void makeQuadtree(quadtree *src, double xmin, double xmax, double ymin, double y
         makeQuadtree(ur ,xmid, xmax, ymin, ymid, particules);
         makeQuadtree(dl ,xmin, xmid, ymid, ymax, particules);
         makeQuadtree(dr ,xmid, xmax, ymid, ymax, particules);
-        //makeQuadtree(dr ,0, 0, 0, 0, particules);
 
         src->center_mass = ul->center_mass + ur->center_mass + dl->center_mass + dr->center_mass; 
         src->center_x = (ul->center_mass * ul->center_x + 
@@ -171,7 +173,8 @@ void makeQuadtree(quadtree *src, double xmin, double xmax, double ymin, double y
 }
 
 //Compute force recursively
-void computeForce(double x, double y, double mass, double theta, quadtree *src, double Fx, double Fy, particule *particules){
+void computeForce(double x, double y, double mass, double theta, quadtree *src, double *Fx, double *Fy, particule *particules){
+    //printf("Forces : %f %f\n", *Fx, *Fy);
     if (src->part_nbr > 1){
         double distancex = x - src->center_x;
         double distancey = y - src->center_y;
@@ -190,8 +193,8 @@ void computeForce(double x, double y, double mass, double theta, quadtree *src, 
             double cst_j = src->center_mass * 1.0 /((rij+E0)*(rij+E0)*(rij+E0));
             double cord_x = cst_j * distancex;
             double cord_y = cst_j * distancey;
-            Fx += cord_x;
-            Fy += cord_y;
+            *Fx += cord_x;
+            *Fy += cord_y;
         }
 
     }else{
@@ -203,11 +206,25 @@ void computeForce(double x, double y, double mass, double theta, quadtree *src, 
             double cst_j = src->center_mass * 1.0 /((rij+E0)*(rij+E0)*(rij+E0));
             double cord_x = cst_j * distancex;
             double cord_y = cst_j * distancey;
-            Fx += cord_x;
-            Fy += cord_y;
+            *Fx += cord_x;
+            *Fy += cord_y;
         }
     }
 }
+
+
+//Free all node of the quad tree
+void freeTree(quadtree *src){
+    if (src->ul != NULL) freeTree(src->ul);
+    if (src->ur != NULL) freeTree(src->ur);
+    if (src->dl != NULL) freeTree(src->dl);
+    if (src->dr != NULL) freeTree(src->dr);
+   // free(src->part_index);
+    free(src);
+}
+
+
+
 
 int main (int argc, char *argv[]){
 
@@ -287,12 +304,12 @@ int main (int argc, char *argv[]){
         root->part_index = index;
         printf("run make quadtree\n");
         makeQuadtree(root, 0, 1, 0, 1, particules);
-        printf("quadtree %d %d %d %d %d \n",root->part_nbr, root->ul->part_nbr, root->ur->part_nbr, root->dl->part_nbr, root->dr->part_nbr);
+        //printf("quadtree %d %d %d %d %d \n",root->part_nbr, root->ul->part_nbr, root->ur->part_nbr, root->dl->part_nbr, root->dr->part_nbr);
 	    //compute forces for each particule recursively 
         for (i = 0; i<N; i++){
             sum_Fx[i] = 0;
             sum_Fy[i] = 0;
-            computeForce(particules[i]->pos_x, particules[i]->pos_y, particules[i]->mass, theta, root, sum_Fx[i], sum_Fy[i], particules);
+            computeForce(particules[i]->pos_x, particules[i]->pos_y, particules[i]->mass, theta, root, &sum_Fx[i], &sum_Fy[i], particules);
         }
 	    
 	    //Update of the position and velocity of each particule
@@ -304,7 +321,7 @@ int main (int argc, char *argv[]){
         }
 
         //Free quad tree
-
+        //freeTree(root);
 
     	/*
 	for (i=0; i<N; i++) {
