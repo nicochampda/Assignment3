@@ -39,17 +39,6 @@ typedef struct node{
     struct node *dr;
 }quadtree;
 
-// function to check if a particle p is in a rectangle of a quadtree
-int is_in_rectangle(double xmin, double xmax, double ymin, double ymax, double pos_x, double pos_y){
-    if(pos_x>xmax || pos_x<xmin || pos_y>ymax || pos_y<ymin){
-        return 0 ;
-    }else{
-        return 1 ;
-    }
-}
-
-
-
 //insert an elment at the end of an array
 int * insert_in_list(int *list,int new_element, int N){
     int* maliste;
@@ -100,23 +89,21 @@ void makeQuadtree(quadtree *src, double xmin, double xmax, double ymin, double y
             int cur_part = src->part_index[i];
             double pos_x = particules[cur_part]->pos_x;
             double pos_y = particules[cur_part]->pos_y;
-            if (is_in_rectangle(xmin, xmid, ymin, ymid, pos_x, pos_y)){
-                ul->part_index = insert_in_list(ul->part_index, cur_part, ul->part_nbr);
-                ul->part_nbr++;
+            if (pos_x < xmid){
+                if (pos_y < ymid){
+                    ul->part_index = insert_in_list(ul->part_index, cur_part, ul->part_nbr);
+                    ul->part_nbr++;
+                }else{
+                    dl->part_index = insert_in_list(dl->part_index, cur_part, dl->part_nbr);
+                    dl->part_nbr++;
+                }
             }else{
-                if (is_in_rectangle(xmid, xmax, ymin, ymid, pos_x, pos_y)){
+                if (pos_y < ymid){
                     ur->part_index = insert_in_list(ur->part_index, cur_part, ur->part_nbr);
                     ur->part_nbr++;
                 }else{
-                    if (is_in_rectangle(xmin, xmid, ymid, ymax, pos_x, pos_y)){
-                        dl->part_index = insert_in_list(dl->part_index, cur_part, dl->part_nbr);
-                        dl->part_nbr++;
-                    }else{
-                        if (is_in_rectangle(xmid, xmax, ymid, ymax, pos_x, pos_y)){
-                            dr->part_index = insert_in_list(dr->part_index, cur_part, dr->part_nbr);
-                            dr->part_nbr++;
-                        }
-                    }
+                    dr->part_index = insert_in_list(dr->part_index, cur_part, dr->part_nbr);
+                    dr->part_nbr++;
                 }
             }
         }
@@ -173,7 +160,10 @@ void makeQuadtree(quadtree *src, double xmin, double xmax, double ymin, double y
 }
 
 //Compute force recursively
+long int call = 0;
+
 void computeForce(int part_n, double x, double y, double mass, double theta, quadtree *src, double *Fx, double *Fy, particule *particules){
+    call += 1;
     if (src->part_nbr > 1){
         double distancex = x - src->center_x;
         double distancey = y - src->center_y;
@@ -270,6 +260,10 @@ int main (int argc, char *argv[]){
 
    //for time measures of the program 
     double time1;
+    double timeQuadStart, timeQuadEnd, timeQuad;
+    double timeForceStart, timeForceEnd, timeForce;
+    timeQuad = 0;
+    timeForce = 0;
 
     time1 = get_wall_seconds();
 
@@ -306,15 +300,25 @@ int main (int argc, char *argv[]){
             index[i] = i;
         root->part_index = index;
 
+        timeQuadStart = get_wall_seconds();
+        
         makeQuadtree(root, 0, 1, 0, 1, particules);
+        
+        timeQuadEnd = get_wall_seconds();
+        timeQuad += timeQuadEnd - timeQuadStart;
 
 	    //compute forces for each particule 
+        timeForceStart = get_wall_seconds();
+
         for (i = 0; i<N; i++){
             sum_Fx[i] = 0;
             sum_Fy[i] = 0;
             computeForce(i, particules[i]->pos_x, particules[i]->pos_y, particules[i]->mass, theta, root, &sum_Fx[i], &sum_Fy[i], particules);
         }
 	    
+        timeForceEnd = get_wall_seconds();
+        timeForce += timeForceEnd - timeForceStart;
+
 	    //Update of the position and velocity of each particule
         for (i=0; i<N; i++){
             particules[i]->vel_x += Gdelta_t * sum_Fx[i];
@@ -344,6 +348,9 @@ int main (int argc, char *argv[]){
         CloseDisplay();
     }
     printf("calculations took %7.3f wall seconds.\n", get_wall_seconds()-time1);
+    printf("\ttotal in makeQuadTree : %7.3f wall seconds\n", timeQuad);
+    printf("\ttotal in computeForce : %7.3f wall seconds\n", timeForce);
+    printf("nbr of call to compute : %ld\n", call);
     time1 = get_wall_seconds();
 
 
