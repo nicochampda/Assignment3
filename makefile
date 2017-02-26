@@ -1,6 +1,6 @@
 CFLAGS=-Wall -g -O2
 INCLUDES=-I/opt/X11/include
-LDFLAGS=-L/opt/X11/lib -lX11 -lm
+LDFLAGS=-L/opt/X11/lib -lX11 -lm -lpthread
 
 galsim: galsim.o file_operations.o graphics.o
 	gcc $(CFLAGS) $(INCLUDES) -o galsim file_operations.o graphics.o galsim.o $(LDFLAGS)

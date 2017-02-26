@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <math.h>
 #include <sys/time.h>
+#include <pthread.h>
+
 #include "graphics/graphics.h"
 #include "file_operations/file_operations.h"
 
@@ -38,6 +40,17 @@ typedef struct node{
     struct node *dl;
     struct node *dr;
 }quadtree;
+
+//definition of arg structure for threads
+typedef struct arg_thread{
+    int fst;
+    int lst;
+    double *Fx;
+    double *Fy;
+    particule *part;
+    quadtree *quad;
+    double theta;
+}arg_thread;
 
 //insert an elment at the end of an array
 int * insert_in_list(int *list,int new_element, int N){
@@ -215,14 +228,33 @@ void freeTree(quadtree *src){
     free(src);
 }
 
+//Function that call computeForce
+void* thread_func(void* arg){
+    arg_thread *input = (arg_thread *)arg;
+    int fst = input->fst;
+    int lst = input->lst;
+    double *sum_Fx = input->Fx;
+    double *sum_Fy = input->Fy;
+    particule *particules = input->part;
+    quadtree *root = input->quad;
+    double theta = input->theta;
+
+    int i;
+    for (i = fst; i < lst; i++){
+        sum_Fx[i] = 0;
+        sum_Fy[i] = 0;
+        computeForce(i, particules[i]->pos_x, particules[i]->pos_y, particules[i]->mass, theta, root, &sum_Fx[i], &sum_Fy[i], particules);
+    }
+    return NULL;
+}
 
 
 
 int main (int argc, char *argv[]){
 
 
-    if (argc != 7){
-        printf("Wrong number of arguments given. Write:%s nbr_of_star filename nsteps delta_t theta graphics_0/1\n", argv[0]);
+    if (argc != 8){
+        printf("Wrong number of arguments given. Write:%s nbr_of_star filename nsteps delta_t theta graphics_0/1 nThreads\n", argv[0]);
         return -1;
     }
 
@@ -232,6 +264,7 @@ int main (int argc, char *argv[]){
     const double delta_t = atof(argv[4]);
     const double theta = atof(argv[5]);
     const int graphics = atoi(argv[6]);
+    const int nThreads = atoi(argv[7]);
 
     const double n = atof(argv[1]);
     particule particules[N];
@@ -310,12 +343,30 @@ int main (int argc, char *argv[]){
 	    //compute forces for each particule 
         timeForceStart = get_wall_seconds();
 
-        for (i = 0; i<N; i++){
-            sum_Fx[i] = 0;
-            sum_Fy[i] = 0;
-            computeForce(i, particules[i]->pos_x, particules[i]->pos_y, particules[i]->mass, theta, root, &sum_Fx[i], &sum_Fy[i], particules);
+        arg_thread args[nThreads];
+        pthread_t thread[nThreads];
+        int prev = 0;
+        int incr = N/nThreads;
+
+        for (i = 0; i < nThreads; i++){
+            args[i].fst = prev;
+            prev += incr;
+            args[i].lst = prev;
+            args[i].Fx = sum_Fx;
+            args[i].Fy = sum_Fy;
+            args[i].theta = theta;
+            args[i].part = particules;
+            args[i].quad = root;
+
+         //   printf("creating thread %i\n", i);
+            pthread_create(&thread[i], NULL, thread_func, (void*)&args[i]);
         }
+
 	    
+        for (i = 0; i < nThreads; i++){
+            pthread_join(thread[i], NULL);
+        }
+
         timeForceEnd = get_wall_seconds();
         timeForce += timeForceEnd - timeForceStart;
 
