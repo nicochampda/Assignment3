@@ -173,10 +173,8 @@ void makeQuadtree(quadtree *src, double xmin, double xmax, double ymin, double y
 }
 
 //Compute force recursively
-long int call = 0;
 
 void computeForce(int part_n, double x, double y, double mass, double theta, quadtree *src, double *Fx, double *Fy, particule *particules){
-    call += 1;
     if (src->part_nbr > 1){
         double distancex = x - src->center_x;
         double distancey = y - src->center_y;
@@ -238,7 +236,6 @@ void* thread_func(void* arg){
     particule *particules = input->part;
     quadtree *root = input->quad;
     double theta = input->theta;
-
     int i;
     for (i = fst; i < lst; i++){
         sum_Fx[i] = 0;
@@ -401,7 +398,6 @@ int main (int argc, char *argv[]){
     printf("calculations took %7.3f wall seconds.\n", get_wall_seconds()-time1);
     printf("\ttotal in makeQuadTree : %7.3f wall seconds\n", timeQuad);
     printf("\ttotal in computeForce : %7.3f wall seconds\n", timeForce);
-    printf("nbr of call to compute : %ld\n", call);
     time1 = get_wall_seconds();
 
 
