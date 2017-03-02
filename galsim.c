@@ -342,10 +342,22 @@ int main (int argc, char *argv[]){
 
         arg_thread args[nThreads];
         pthread_t thread[nThreads];
-        int prev = 0;
         int incr = N/nThreads;
+        int rem = N % nThreads;
+        
+        int prev = incr + rem;
 
-        for (i = 0; i < nThreads; i++){
+        args[0].fst = 0;
+        args[0].lst = prev;
+        args[0].Fx = sum_Fx;
+        args[0].Fy = sum_Fy;
+        args[0].theta = theta;
+        args[0].part = particules;
+        args[0].quad = root;
+
+        pthread_create(&thread[0], NULL, thread_func, (void*)&args[0]);
+        
+        for (i = 1; i < nThreads; i++){
             args[i].fst = prev;
             prev += incr;
             args[i].lst = prev;
