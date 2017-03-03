@@ -1,5 +1,5 @@
-CFLAGS=-Wall -g -O2
-INCLUDES=-I/opt/X11/include
+CFLAGS=-Wall -g -O3
+INCLUDES=-I/opt/X11/include -fopenmp
 LDFLAGS=-L/opt/X11/lib -lX11 -lm
 
 galsim: galsim.o file_operations.o graphics.o

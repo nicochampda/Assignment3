@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <sys/time.h>
+#include <omp.h>
 #include "graphics/graphics.h"
 #include "file_operations/file_operations.h"
 
@@ -160,10 +161,8 @@ void makeQuadtree(quadtree *src, double xmin, double xmax, double ymin, double y
 }
 
 //Compute force recursively
-long int call = 0;
 
 void computeForce(int part_n, double x, double y, double mass, double theta, quadtree *src, double *Fx, double *Fy, particule *particules){
-    call += 1;
     if (src->part_nbr > 1){
         double distancex = x - src->center_x;
         double distancey = y - src->center_y;
@@ -221,7 +220,7 @@ void freeTree(quadtree *src){
 int main (int argc, char *argv[]){
 
 
-    if (argc != 7){
+    if (argc != 8){
         printf("Wrong number of arguments given. Write:%s nbr_of_star filename nsteps delta_t theta graphics_0/1\n", argv[0]);
         return -1;
     }
@@ -232,7 +231,8 @@ int main (int argc, char *argv[]){
     const double delta_t = atof(argv[4]);
     const double theta = atof(argv[5]);
     const int graphics = atoi(argv[6]);
-
+    const int nThreads = atoi(argv[7]);
+    
     const double n = atof(argv[1]);
     particule particules[N];
   
@@ -310,6 +310,7 @@ int main (int argc, char *argv[]){
 	    //compute forces for each particule 
         timeForceStart = get_wall_seconds();
 
+#pragma omp parallel for num_threads(nThreads) 
         for (i = 0; i<N; i++){
             sum_Fx[i] = 0;
             sum_Fy[i] = 0;
@@ -320,6 +321,7 @@ int main (int argc, char *argv[]){
         timeForce += timeForceEnd - timeForceStart;
 
 	    //Update of the position and velocity of each particule
+#pragma omp parallel for num_threads(nThreads) 
         for (i=0; i<N; i++){
             particules[i]->vel_x += Gdelta_t * sum_Fx[i];
             particules[i]->vel_y += Gdelta_t * sum_Fy[i];
@@ -350,7 +352,6 @@ int main (int argc, char *argv[]){
     printf("calculations took %7.3f wall seconds.\n", get_wall_seconds()-time1);
     printf("\ttotal in makeQuadTree : %7.3f wall seconds\n", timeQuad);
     printf("\ttotal in computeForce : %7.3f wall seconds\n", timeForce);
-    printf("nbr of call to compute : %ld\n", call);
     time1 = get_wall_seconds();
 
 
