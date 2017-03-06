@@ -312,7 +312,7 @@ int main (int argc, char *argv[]){
 	    //compute forces for each particule 
         timeForceStart = get_wall_seconds();
 
-#pragma omp parallel for num_threads(nThreads) 
+#pragma omp parallel for num_threads(nThreads) schedule(guided)
         for (i = 0; i<N; i++){
             sum_Fx[i] = 0;
             sum_Fy[i] = 0;
@@ -325,7 +325,7 @@ int main (int argc, char *argv[]){
         timeUpdateStart = get_wall_seconds();
 
 	    //Update of the position and velocity of each particule
-#pragma omp parallel for num_threads(nThreads) 
+#pragma omp parallel for num_threads(nThreads) schedule(guided)
         for (i=0; i<N; i++){
             particules[i]->vel_x += Gdelta_t * sum_Fx[i];
             particules[i]->vel_y += Gdelta_t * sum_Fy[i];
