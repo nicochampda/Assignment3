@@ -260,10 +260,12 @@ int main (int argc, char *argv[]){
 
    //for time measures of the program 
     double time1;
-    double timeQuadStart, timeQuadEnd, timeQuad;
+    double timeQuadStart, timeQuadEnd,  timeQuad;
     double timeForceStart, timeForceEnd, timeForce;
+    double timeUpdateStart, timeUpdateEnd, timeUpdate;
     timeQuad = 0;
     timeForce = 0;
+    timeUpdate = 0;
 
     time1 = get_wall_seconds();
 
@@ -320,6 +322,8 @@ int main (int argc, char *argv[]){
         timeForceEnd = get_wall_seconds();
         timeForce += timeForceEnd - timeForceStart;
 
+        timeUpdateStart = get_wall_seconds();
+
 	    //Update of the position and velocity of each particule
 #pragma omp parallel for num_threads(nThreads) 
         for (i=0; i<N; i++){
@@ -328,6 +332,9 @@ int main (int argc, char *argv[]){
             particules[i]->pos_x += delta_t*particules[i]->vel_x;
             particules[i]->pos_y += delta_t*particules[i]->vel_y;
         }
+        timeUpdateEnd = get_wall_seconds();
+        
+        timeUpdate+= timeUpdateEnd - timeUpdateStart ; 
 
         //Free quad tree
         freeTree(root);
@@ -352,6 +359,7 @@ int main (int argc, char *argv[]){
     printf("calculations took %7.3f wall seconds.\n", get_wall_seconds()-time1);
     printf("\ttotal in makeQuadTree : %7.3f wall seconds\n", timeQuad);
     printf("\ttotal in computeForce : %7.3f wall seconds\n", timeForce);
+     printf("\ttotal in Update particles : %7.3f wall seconds\n", timeUpdate);
     time1 = get_wall_seconds();
 
 
